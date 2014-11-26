@@ -1,8 +1,13 @@
+import cProfile
+
 __author__ = 'devonmoss'
 
 import requests
 import csv
 import json
+import handle_csv
+import handle_member_json
+import compare
 
 # auth = {'username': '***', 'password': '***'}
 # p = requests.post('https://signin.lds.org/login.html', auth)
@@ -30,24 +35,23 @@ import json
 
 #
 
-stake_members = []
-with open('path/to/CounselorList141108.csv', 'rb') as f:
-    dialect = csv.Sniffer().sniff(f.read(1024))
-    f.seek(0)
-    reader = csv.reader(f, dialect)
-    for row in reader:
-        stake = row[13]
-        last_name = row[0]
-        first_name = row[1]
-        street_address = row[2]
-        work_phone = row[6]
-        home_phone = row[7]
-        email1 = row[8]
-        email2 = row[9]
-
-        if 'Pleasant Grove East' in stake:
-            stake_members.append(row)
-            print 'added work_phone: {0}'.format(work_phone)
+# with open('/Users/devonmoss/Downloads/CounselorList141108.csv', 'rb') as f:
+#     dialect = csv.Sniffer().sniff(f.read(1024))
+#     f.seek(0)
+#     reader = csv.reader(f, dialect)
+    # for row in reader:
+    #     stake = row[13]
+    #     last_name = row[0]
+    #     first_name = row[1]
+    #     street_address = row[2]
+    #     work_phone = row[6]
+    #     home_phone = row[7]
+    #     email1 = row[8]
+    #     email2 = row[9]
+    #
+    #     if 'Pleasant Grove East' in stake:
+    #         stake_members.append(row)
+    #         print 'added work_phone: {0}'.format(work_phone)
 
 
         # if gen_prefered_name in all_names:
@@ -88,6 +92,7 @@ def read_in_files():
             households = data['households']
             for h in households:
                 all_households.append(h)
+    return all_households
         # print 'done reading file {0}'.format(filename)
 
     # households_with_name = [x for x in all_households if 'Adams' in x['householdName']]
@@ -95,22 +100,35 @@ def read_in_files():
     # if len(households_with_name):
     #     for h in households_with_name:
     #         print h
-    print 'all_households: {0}'.format(len(all_households))
-    print 'stake_members: {0}'.format(len(stake_members))
-    for row in stake_members:
-        has_phone = [x for x in all_households if 'phone' in x]
-        phone_matches_work = [x for x in has_phone if row[6] and row == x['phone']]
-        phone_matches_home = [x for x in has_phone if row[7] == x['phone']]
-
-    if len(phone_matches_work):
-        print 'work phone matches: {0}'.format(len(phone_matches_work))
-    if len(phone_matches_home):
-        print 'home phone matches: {0}'.format(len(phone_matches_home))
+    # print 'all_households: {0}'.format(len(all_households))
+    # print 'stake_members: {0}'.format(len(stake_members))
+    # for row in stake_members:
+    #     has_phone = [x for x in all_households if 'phone' in x]
+    #     phone_matches_work = [x for x in has_phone if row[6] and row == x['phone']]
+    #     phone_matches_home = [x for x in has_phone if row[7] == x['phone']]
+    #
+    # if len(phone_matches_work):
+    #     print 'work phone matches: {0}'.format(len(phone_matches_work))
+    # if len(phone_matches_home):
+    #     print 'home phone matches: {0}'.format(len(phone_matches_home))
         # for m in phone_matches:
         #     # print 'exact match for phone number: {0}'.format(m['phone'])
         #     pass
-read_in_files()
 
+
+all_households = read_in_files()
+fuzzy_comparable_members = handle_member_json.make_fuzzy_comparable_member_list(all_households)
+
+counselors = handle_csv.get_counselors_in_stake('PATH/TO/CSV/file.csv', 'Pleasant Grove East')
+fuzzy_comparable_counselors = handle_csv.make_fuzzy_comparable_counselor_list(counselors)
+
+total_matches = 0
+for c in fuzzy_comparable_counselors:
+    total_matches = total_matches + compare.fuzzy_compare(c, fuzzy_comparable_members)
+
+print 'total matches: {0}'.format(total_matches)
+print 'total searched: {0}'.format(len(fuzzy_comparable_counselors))
+print 'find percentage: {0}'.format(float(total_matches)/(float(len(fuzzy_comparable_counselors))))
 
 """
     logic for uniquely identifying people
