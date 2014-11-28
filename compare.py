@@ -28,74 +28,44 @@ class CompareRules():
 
 def fuzzy_compare(counselor, members):
 
-    # exact_matches = []
-    # non_exact_matches = []
-    # # check for exact matches to phone
-    # same_phone = [x for x in members if x['phone'] and x['phone'] in counselor['phones'].values()]
-    #
-    # # check for exact matches to email
-    # same_email = [x for x in members if x['email'] and x['email'] in counselor['emails'].values()]
-    #
-    # # check for exact matches to address
-    # same_address = [x for x in members if x['street'] and x['street'] in counselor['street']]
-    #
-    # # check for exact matches to Last Name
-    # same_last = [x for x in members if x['last_name'] == counselor['last_name']]
-    #
-    # # check for first name match
-    # same_first_and_last = [x for x in same_last if fuzz.ratio(x['first_name'], counselor['first_name']) > FIRST_NAME_THRESHOLD]
+    # set the fuzzy search fields for a member
+    def set_fields(mem, fields):
+        mem.fuzzy_search_fields = fields
+        return mem
 
+    def set_threshold(mem, threshold):
+        mem.threshold = threshold
+        return mem
+
+    members = [set_fields(x, ['last_name', 'first_name', 'street']) for x in members]
     matches = [x for x in members if x == counselor]
-
     if len(matches):
-        for match in matches:
-            print 'match found:'
-            print 'last name: {0} = {1}'.format(match['last_name'], counselor['last_name'])
-            print 'first name: {0} = {1}'.format(match['first_name'], counselor['first_name'])
-            print 'street: {0} = {1}'.format(match['street'], counselor['street'])
-            print 'phone: {0} = {1} or {2}'.format(match['phone'], counselor['phones']['work'], counselor['phones']['home'])
-            print 'email: {0} = {1} or {2}'.format(match['email'], counselor['emails']['primary'], counselor['emails']['secondary'])
-            print
-    else:
-        print 'no match found for {0} {1}'.format(counselor['first_name'], counselor['last_name'])
+        return {'match_type': 'exact', 'counselor': counselor, 'match': matches[0]}
 
-    return len(matches)
-    # intersect = set(same_phone).intersection(set(same_email)).intersection(set(same_last))
-    # if len(same_phone):
-    #     phone_intersect = [x for x in same_phone if x in same_last]
-    #
-    # if len(same_email):
-    #     email_intersect = [x for x in same_email if x in same_last]
-    #
-    # if len(same_address):
-    #     address_intersect = [x for x in same_address if x in same_last]
-    #
-    #
-    #
-    # exact_match = len(same_phone) + len(same_email) + len(same_last) > 1
-    #
-    #
-    # if exact_match:
-    #     # validate with the rest of the fields
-    #     exact_matches.append(counselor)
-    #     # print 'Exact match found for {0} {1}'.format(counselor['first_name'], counselor['last_name'])
-    # else:
-    #     # print 'No exact match found for {0} {1}. Fuzzy search results:'.format(counselor['first_name'], counselor['last_name'])
-    #     # fuzzy email
-    #     non_exact_matches.append(counselor)
-    #     # email_choices = [x['email'] for x in members]
-    #     # for email in counselor['emails'].values():
-    #     #     if email:
-    #     #         print 'top email matches for {0}'.format(email)
-    #     #         closest_matches = process.extract(email, email_choices)
-    #     #         for c in closest_matches:
-    #     #             print '{0} -- confidence: {1}'.format(c[0], c[1])
-    #     #
-    #     # #fuzzy address
-    #     # address_choices = [x['street'] for x in members]
-    #     # street = counselor['street']
-    #     # if street:
-    #     #     print 'top street matches for {0}'.format(street)
-    #     #     closest_matches = process.extract(street, address_choices)
-    #     #     for c in closest_matches:
-    #     #         print '{0} -- confidence: {1}'.format(c[0], c[1])
+    else:
+        # return any with same lastname and address:
+        members = [set_fields(x, ['last_name', 'street']) for x in members]
+        name_street_matches = [x for x in members if x == counselor]
+
+        # get list of first names form the returned name_street_matches
+        first_names = [x['first_name'] for x in name_street_matches]
+
+        # return best first name matches
+        best_first_name_matches = process.extract(counselor['first_name'], first_names)
+        if len(best_first_name_matches) and best_first_name_matches[0][1] > 85:
+            best_name_match = best_first_name_matches[0]
+            best_match = [x for x in name_street_matches if x['first_name'] == best_name_match[0]]
+            if len(best_match):
+                return {'match_type': 'first_name_widen', 'counselor': counselor, 'match': best_match[0]}
+
+
+        # if that didn't find one we will change strategy and attempt to prove the counselor doesn't live there anymore.
+        members = [set_fields(x, ['street']) for x in members]
+        street_matches = [x for x in members if x == counselor]
+        different_last_name = [x for x in street_matches if x['last_name'] != counselor['last_name']]
+
+        if len(different_last_name):
+            return {'match_type': 'positive_mismatch', 'counselor': counselor, 'match': None}
+
+
+    return {'match_type': None, 'counselor': counselor, 'match': None}

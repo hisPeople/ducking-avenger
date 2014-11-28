@@ -119,16 +119,53 @@ def read_in_files():
 all_households = read_in_files()
 fuzzy_comparable_members = handle_member_json.make_fuzzy_comparable_member_list(all_households)
 
-counselors = handle_csv.get_counselors_in_stake('PATH/TO/CSV/file.csv', 'Pleasant Grove East')
+counselors = handle_csv.get_counselors_in_stake('PATH/TO/CSV/FILE.csv', 'Pleasant Grove East')
 fuzzy_comparable_counselors = handle_csv.make_fuzzy_comparable_counselor_list(counselors)
 
 total_matches = 0
+fuzzy_results = []
 for c in fuzzy_comparable_counselors:
-    total_matches = total_matches + compare.fuzzy_compare(c, fuzzy_comparable_members)
+    # total_matches = total_matches + compare.fuzzy_compare(c, fuzzy_comparable_members)
+    fuzzy_results.append(compare.fuzzy_compare(c, fuzzy_comparable_members))
 
-print 'total matches: {0}'.format(total_matches)
+
+# get exact matches
+exact_matches = [x for x in fuzzy_results if x['match_type'] == 'exact']
+# get widened matches
+widened_matches = [x for x in fuzzy_results if x['match_type'] == 'first_name_widen']
+# get mismatches
+positive_mismatches = [x for x in fuzzy_results if x['match_type'] == 'positive_mismatch']
+# get no matches
+no_matches = [x for x in fuzzy_results if x['match_type'] is None]
+
+print '** exact matches **'
+for em in exact_matches:
+    print em
+print
+
+print '** widened matches **'
+for wm in widened_matches:
+    print wm
+print
+
+print '** positive mismatches **'
+for pmm in positive_mismatches:
+    print pmm
+print
+
+print '** no matches **'
+for nom in no_matches:
+    print nom
+print
+
+
+print 'exact matches: {0}'.format(len(exact_matches))
+print 'widened matches: {0}'.format(len(widened_matches))
+print 'total matches: {0}'.format(len(widened_matches) + len(exact_matches))
+print 'positive mismatches: {0}'.format(len(positive_mismatches))
+print 'total unaccounted for: {0}'.format(len(no_matches))
 print 'total searched: {0}'.format(len(fuzzy_comparable_counselors))
-print 'find percentage: {0}'.format(float(total_matches)/(float(len(fuzzy_comparable_counselors))))
+print 'find percentage: {0}'.format(float(len(exact_matches) + len(widened_matches) + len(positive_mismatches))/(float(len(fuzzy_comparable_counselors))))
 
 """
     logic for uniquely identifying people
