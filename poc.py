@@ -140,22 +140,32 @@ no_matches = [x for x in fuzzy_results if x['match_type'] is None]
 
 print '** exact matches **'
 for em in exact_matches:
-    print em
+    counselor = em['counselor']
+    match = em['match']
+    print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
+    print 'match: \t\t {0} {1} {2}'.format(match['first_name'], match['last_name'], match['street'])
+    print
 print
 
 print '** widened matches **'
 for wm in widened_matches:
-    print wm
+    counselor = wm['counselor']
+    match = wm['match']
+    print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
+    print 'match: \t\t {0} {1} {2}'.format(match['first_name'], match['last_name'], match['street'])
+    print
 print
 
 print '** positive mismatches **'
 for pmm in positive_mismatches:
-    print pmm
+    counselor = pmm['counselor']
+    print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
 print
 
 print '** no matches **'
 for nom in no_matches:
-    print nom
+    counselor = nom['counselor']
+    print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
 print
 
 
