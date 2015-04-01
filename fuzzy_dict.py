@@ -14,10 +14,10 @@ def _is_fuzzy_match(s1, s2, threshold=90):
 
 def _is_fuzzy_token_set_match(s1, s2, threshold=90):
     #for debugging TODO: REMOVE
-    ratio_1 = fuzz.token_set_ratio(s1, s2)
-    ratio_2 = fuzz.token_set_ratio(s2, s1)
-    best = ratio_1 if ratio_1 > ratio_2 else ratio_2
-    return best > threshold
+    # ratio_1 = fuzz.token_set_ratio(s1, s2)
+    # ratio_2 = fuzz.token_set_ratio(s2, s1)
+    # best = ratio_1 if ratio_1 > ratio_2 else ratio_2
+    return fuzz.token_set_ratio(s1, s2) > threshold
 
 
 class FuzzyDict(dict):
