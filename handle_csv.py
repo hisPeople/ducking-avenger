@@ -130,7 +130,7 @@ def make_fuzzy_comparable_district_list(scouters):
                 'first_name':    c[14],
                 'middle_name':   c[15],
                 'last_name':     c[16],
-                'full_name':     c[14] c[15] c[16],
+#                'full_name':     c[14] c[15] c[16],
                 'age':           c[21],
                 'gender':        c[24],
                 'street':        c[29],
