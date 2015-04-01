@@ -87,7 +87,7 @@ def read_in_files():
     all_households = []
     for filename in member_file_list:
         # print 'reading file {0}'.format(filename)
-        with open(filename, 'r') as f:
+        with open('data/'+filename, 'r') as f:
             data = json.load(f)
             households = data['households']
             for h in households:
@@ -119,7 +119,7 @@ def read_in_files():
 all_households = read_in_files()
 fuzzy_comparable_members = handle_member_json.make_fuzzy_comparable_member_list(all_households)
 
-counselors = handle_csv.get_counselors_in_stake('PATH/TO/CSV/FILE.csv', 'Pleasant Grove East')
+counselors = handle_csv.get_counselors_in_stake('data/CounselorList141108.csv', 'Pleasant Grove East')
 fuzzy_comparable_counselors = handle_csv.make_fuzzy_comparable_counselor_list(counselors)
 
 total_matches = 0
@@ -130,52 +130,69 @@ for c in fuzzy_comparable_counselors:
 
 
 # get exact matches
-exact_matches = [x for x in fuzzy_results if x['match_type'] == 'exact']
+exact_matches    = [x for x in fuzzy_results if (x['match_type'] == 'matched ')]
 # get widened matches
-widened_matches = [x for x in fuzzy_results if x['match_type'] == 'first_name_widen']
+probable_matches = [x for x in fuzzy_results if (x['match_type'] == 'probable')]
 # get mismatches
-positive_mismatches = [x for x in fuzzy_results if x['match_type'] == 'positive_mismatch']
+possible_matches = [x for x in fuzzy_results if (x['match_type'] == 'possible')]
 # get no matches
-no_matches = [x for x in fuzzy_results if x['match_type'] is None]
+not_matches      = [x for x in fuzzy_results if (x['match_type'] == 'moved   ')]
+unknown_matches  = [x for x in fuzzy_results if (x['match_type'] == 'unknown ')]
 
-print '** exact matches **'
-for em in exact_matches:
-    counselor = em['counselor']
-    match = em['match']
+print '\n *****  RESULTS  *****\n'
+
+for c in fuzzy_results:
+    counselor = c['counselor']
     print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
-    print 'match: \t\t {0} {1} {2}'.format(match['first_name'], match['last_name'], match['street'])
-    print
-print
+    # print '{0}' .format(c['match_type'])
+    if (c['match_type'] == 'moved   '):
+        new_owner = c['match']
+        print '{0}\t   * new owner: {1}\n'.format(c['match_type'], new_owner['last_name'])
+    elif (c['match_type'] == 'unknown '):
+        print 'Unknown\n'
+    else:
+        match = c['match']
+        print '{0}\t {1} {2} {3}\n'.format(c['match_type'], match['first_name'], match['last_name'], match['street'])
 
-print '** widened matches **'
-for wm in widened_matches:
-    counselor = wm['counselor']
-    match = wm['match']
-    print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
-    print 'match: \t\t {0} {1} {2}'.format(match['first_name'], match['last_name'], match['street'])
-    print
-print
+# print '** exact matches **'
+# for em in exact_matches:
+#     counselor = em['counselor']
+#     match = em['match']
+#     print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
+#     print 'match: \t\t {0} {1} {2}'.format(match['first_name'], match['last_name'], match['street'])
+#     print
+# print
 
-print '** positive mismatches **'
-for pmm in positive_mismatches:
-    counselor = pmm['counselor']
-    print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
-print
+# print '** widened matches **'
+# for wm in widened_matches:
+#     counselor = wm['counselor']
+#     match = wm['match']
+#     print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
+#     print 'match: \t\t {0} {1} {2}'.format(match['first_name'], match['last_name'], match['street'])
+#     print
+# print
 
-print '** no matches **'
-for nom in no_matches:
-    counselor = nom['counselor']
-    print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
-print
+# print '** positive mismatches **'
+# for pmm in positive_mismatches:
+#     counselor = pmm['counselor']
+#     print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
+# print
 
+# print '** no matches **'
+# for nom in no_matches:
+#     counselor = nom['counselor']
+#     print 'counselor: \t {0} {1} {2}'.format(counselor['first_name'], counselor['last_name'], counselor['street'])
+# print
 
-print 'exact matches: {0}'.format(len(exact_matches))
-print 'widened matches: {0}'.format(len(widened_matches))
-print 'total matches: {0}'.format(len(widened_matches) + len(exact_matches))
-print 'positive mismatches: {0}'.format(len(positive_mismatches))
-print 'total unaccounted for: {0}'.format(len(no_matches))
-print 'total searched: {0}'.format(len(fuzzy_comparable_counselors))
-print 'find percentage: {0}'.format(float(len(exact_matches) + len(widened_matches) + len(positive_mismatches))/(float(len(fuzzy_comparable_counselors))))
+print '\n'
+print 'exact matches: {0}'        .format(len(exact_matches))
+print 'probable matches: {0}'     .format(len(probable_matches))
+print 'possible matches: {0}'     .format(len(possible_matches))
+print 'total matches: {0}'        .format(len(exact_matches) + len(probable_matches) + len(possible_matches))
+print 'move outs: {0}'            .format(len(not_matches))
+print 'total unknown: {0}'        .format(len(unknown_matches))
+print 'total searched: {0}'       .format(len(fuzzy_comparable_counselors))
+print 'find percentage: {0}'.format(float(len(exact_matches) + len(probable_matches) + len(possible_matches))/(float(len(fuzzy_comparable_counselors))))
 
 """
     logic for uniquely identifying people

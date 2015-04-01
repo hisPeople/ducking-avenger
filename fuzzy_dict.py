@@ -21,7 +21,7 @@ def _is_fuzzy_token_set_match(s1, s2, threshold=90):
 
 
 class FuzzyDict(dict):
-    _key_names = ['first_name', 'last_name', 'street', 'phone', 'email']
+    _key_names = ['first_name', 'last_name', 'street', 'phones', 'emails']
 
     fuzzy_search_fields = None
     threshold = 90
@@ -33,47 +33,55 @@ class FuzzyDict(dict):
             total_hash_val = hash(self[k])
         return total_hash_val
 
-    def __eq__(self, other):
+    def __eq__(other, self):
         if isinstance(other, FuzzyDict):
-            for field in self.fuzzy_search_fields:
+            for field in other.fuzzy_search_fields:
                 if field == 'street':
-                    if not _is_fuzzy_token_set_match(self[field], other[field]):
-                        return False
+                    if _is_fuzzy_token_set_match(self[field], other[field]):
+
+                        """ Add code here to extract numeric portions of addresses and compare for exact match-
+                            If the token match is close, and the numbers are exact, the addresses match.
+                        """
+                        other['match'] = True
+                        return True
+
+                elif field == 'phones':
+                    if 'phone1' in self['phones']:
+                        if ((self['phones']['phone1'] == other['phones']['phone1']) or
+                            (self['phones']['phone1'] == other['phones']['phone2'])):
+                            other['match'] = True
+                            return True
+                    if 'phone2' in self['phones']:
+                        if ((self['phones']['phone2'] == other['phones']['phone1']) or
+                            (self['phones']['phone2'] == other['phones']['phone2'])):
+                            other['match'] = True
+                            return True
+                    # if 'phone1' in self['phones']:
+                    #     if ((self.phones['phone1'] == other.phones['phone1']) or
+                    #         (self.phones['phone1'] == other.phones['phone2'])):
+                    #         return True
+                    # if 'phone2' in self['phones']:
+                    #     if ((self.phones['phone2'] == other.phones['phone1']) or
+                    #         (self.phones['phone2'] == other.phones['phone2'])):
+                    #         return True
+
+                elif field == 'emails':
+                    if   len(self['emails']['email1']):
+                        if ((self['emails']['email1'] == other['emails']['email1']) or
+                            (self['emails']['email1'] == other['emails']['email2'])):
+                            other['match'] = True
+                            return True
+                    if   len(self['emails']['email2']):
+                        if ((self['emails']['email2'] == other['emails']['email1']) or
+                            (self['emails']['email2'] == other['emails']['email2'])):
+                            other['match'] = True
+                            return True
+                        
                 else:
-                    if not _is_fuzzy_match(self[field], other[field], threshold=self.threshold):
-                        return False
+                    if _is_fuzzy_match(self[field], other[field], threshold=self.threshold):
+                        return True
 
-            return True
+            return False
 
-            # first_name_matches = _is_fuzzy_match(self['first_name'], other['first_name'])
-            # last_name_matches = _is_fuzzy_match(self['last_name'], other['last_name'])
-            # street_matches = _is_fuzzy_match(self['street'], other['street'])
-
-            # # handle multiple phones todo -- abstract
-            # if 'phones' in other.keys():
-            #     phone_matches = _is_fuzzy_match(self['phone'], other['phones'])
-            # elif 'phones' in self.keys():
-            #     phone_matches = _is_fuzzy_match(other['phone'], self['phones'])
-            # else:
-            #     phone_matches = _is_fuzzy_match(self['phone'], other['phone'])
-            #
-            # # handle multiple emails todo -- abstract
-            # if 'emails' in other.keys():
-            #     email_matches = _is_fuzzy_match(self['email'], other['emails'])
-            # elif 'emails' in self.keys():
-            #     email_matches = _is_fuzzy_match(other['email'], self['emails'])
-            # else:
-            #     email_matches = _is_fuzzy_match(self['email'], other['email'])
-
-            # if first_name_matches and last_name_matches and street_matches:
-            #     return True
-            #
-            # return False
-
-            # match_ratio_sum = 0
-            # for k in self.keys():
-            #     match_ratio_sum = match_ratio_sum + fuzz.ratio(self[k], other[k])
-            # composite_ratio = match_ratio_sum/len(self.keys())
-            # return composite_ratio > 90
         return NotImplemented
 
