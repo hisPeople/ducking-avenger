@@ -37,13 +37,16 @@ class FuzzyDict(dict):
         if isinstance(other, FuzzyDict):
             for field in other.fuzzy_search_fields:
                 if field == 'street':
-                    if _is_fuzzy_token_set_match(self[field], other[field]):
+                    s1 = self[field][:4]
+                    s2 = other[field][:4]
+                    if s1 == s2:
+                        if _is_fuzzy_token_set_match(self[field], other[field]):
 
-                        """ Add code here to extract numeric portions of addresses and compare for exact match-
-                            If the token match is close, and the numbers are exact, the addresses match.
-                        """
-                        other['match'] = True
-                        return True
+                            """ Add code here to extract numeric portions of addresses and compare for exact match-
+                                If the token match is close, and the numbers are exact, the addresses match.
+                            """
+                            other['match'] = True
+                            return True
 
                 elif field == 'phones':
                     if 'phone1' in self['phones']:
